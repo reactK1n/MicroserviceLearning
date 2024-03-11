@@ -33,7 +33,9 @@ namespace CommandsService.AsyncDataServices
 			var factory = new ConnectionFactory()
 			{
 				HostName = _config["RabbitMQHost"],
-				Port = int.Parse(_config["RabbitMQPort"])
+				Port = int.Parse(_config["RabbitMQPort"]),
+				UserName = "guest",
+				Password = "guest"
 			};
 
 			_connection = factory.CreateConnection();
@@ -73,14 +75,14 @@ namespace CommandsService.AsyncDataServices
 			return Task.CompletedTask;
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
-			Console.WriteLine($"MessageBus Dispose");
 			if (_channel.IsOpen)
 			{
 				_channel.Close();
 				_connection.Close();
 			}
+
 			base.Dispose();
 		}
 

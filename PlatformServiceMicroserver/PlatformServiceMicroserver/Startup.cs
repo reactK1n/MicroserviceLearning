@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,8 +8,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using PlatformServiceMicroserver.AsyncDataServices;
 using PlatformServiceMicroserver.Data;
+using PlatformServiceMicroserver.SyncDataServices.Grpc;
 using PlatformServiceMicroserver.SyncDataServices.HTTP;
 using System;
+using System.IO;
 
 namespace PlatformServiceMicroserver
 {
@@ -51,6 +54,8 @@ namespace PlatformServiceMicroserver
 			//this is how to add http client
 			services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 			services.AddSingleton<IMessageBusClient, MessageBusClient>();
+			//register grpc service
+			services.AddGrpc();
 
 
 			services.AddControllers();
@@ -87,6 +92,15 @@ namespace PlatformServiceMicroserver
 			app.UseEndpoints(endpoints =>
 			{
 				endpoints.MapControllers();
+				//adding grpc service after registering it in the configureservice
+				endpoints.MapGrpcService<GrpcPlatformService>();
+
+
+				//option in grpc setup
+				endpoints.MapGet("/Protos/platforms.proto", async context =>
+				{
+					await context.Response.WriteAsync(File.ReadAllText("Protos/platforms.proto"));
+				});
 			});
 
 			app.PrepPopulation(env);
